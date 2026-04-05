@@ -3,11 +3,9 @@ import "~/styles/globals.css";
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 
-import { TRPCReactProvider } from "~/trpc/react";
-
 export const metadata: Metadata = {
-  title: "Full Stack Template",
-  description: "A template for building full stack applications",
+  title: "Squad.io",
+  description: "A modern full-stack application",
   icons: [{ rel: "icon", url: "/favicon.png" }],
 };
 
@@ -21,9 +19,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${geist.variable}`}>
-      <body>
-        <TRPCReactProvider>{children}</TRPCReactProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
