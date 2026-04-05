@@ -1,19 +1,17 @@
 import { betterAuth } from "better-auth";
-import { createClient, createApi } from "@convex-dev/better-auth";
+import { createClient } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import type { GenericCtx } from "@convex-dev/better-auth/utils";
 import type { DataModel } from "./_generated/dataModel";
 import { components } from "./_generated/api";
 import authConfig from "./auth.config";
-import { tables } from "./schema";
 
-export const authComponent = createClient<DataModel, typeof tables>(
+export const authComponent = createClient<DataModel>(
   components.betterAuth,
-  { verbose: false },
 );
 
-const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
-  return {
+export const createAuth = (ctx: GenericCtx<DataModel>) => {
+  return betterAuth({
     appName: "Squad.io",
     baseURL: process.env.SITE_URL,
     secret: process.env.BETTER_AUTH_SECRET,
@@ -32,12 +30,5 @@ const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
       },
     },
     plugins: [convex({ authConfig })],
-  };
+  });
 };
-
-export const createAuth = (ctx: GenericCtx<DataModel>) => {
-  return betterAuth(createAuthOptions(ctx));
-};
-
-export const { create, findOne, findMany, updateOne, updateMany, deleteOne, deleteMany } =
-  createApi(tables, createAuthOptions);
