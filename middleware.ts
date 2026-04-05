@@ -1,12 +1,39 @@
+import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
 
-export function middleware(_request: NextRequest) {
-  // TODO: Will be replaced with better-auth cookie checks in a later atomic change
+const publicRoutes = ["/login", "/signup", "/forgot-password", "/reset-password"];
+
+export function middleware(request: NextRequest) {
+  const sessionCookie = getSessionCookie(request);
+  const { pathname } = request.nextUrl;
+
+  const isPublicRoute = publicRoutes.some((route) => pathname === route);
+  const isApiRoute = pathname.startsWith("/api/");
+
+  // Allow API routes through (auth proxy, etc.)
+  if (isApiRoute) {
+    return NextResponse.next();
+  }
+
+  // Redirect unauthenticated users to login
+  if (!sessionCookie && !isPublicRoute) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  // Redirect authenticated users away from auth pages
+  if (sessionCookie && isPublicRoute) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api/auth|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
