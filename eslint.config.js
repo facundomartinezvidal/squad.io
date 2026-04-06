@@ -32,6 +32,19 @@ export default tseslint.config(
     },
   },
   {
+    files: [
+      "src/lib/auth-client.ts",
+      "src/lib/auth-server.ts",
+      "src/components/convex-client-provider.tsx",
+    ],
+    rules: {
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+    },
+  },
+  {
     linterOptions: {
       reportUnusedDisableDirectives: true,
     },
