@@ -32,7 +32,10 @@ Convex agent skills for common tasks can be installed by running `npx convex ai-
 
 All backend code lives in `convex/`. Convex auto-deploys on file save when `npx convex dev` is running. No manual migrations — schema changes apply automatically.
 
-- `convex/schema.ts` — App data tables (currently empty, auth tables managed by component)
+- `convex/schema.ts` — App data tables (`players`, `swipes`) + auth tables managed by component
+- `convex/players.ts` — Player queries (`getCurrentPlayer`, `getNextPlayer`) and `createMyProfile` mutation
+- `convex/swipes.ts` — `recordSwipe` mutation (with mutual match detection) and `getMatches` query
+- `convex/seed.ts` — Seed scripts: `createUser` (auth) and `seedPlayers` (10 LoL profiles)
 - `convex/auth.ts` — Better Auth config with email+password, exports `authComponent` and `createAuth`
 - `convex/http.ts` — HTTP router registering auth routes
 - `convex/auth.config.ts` — Convex auth provider (JWT via better-auth)
@@ -40,21 +43,25 @@ All backend code lives in `convex/`. Convex auto-deploys on file save when `npx 
 
 Auth tables (user, session, account, verification, jwks, rateLimit) are managed internally by the `@convex-dev/better-auth` component — do NOT define them in `convex/schema.ts`.
 
+#### Data Model
+- `players` — LoL player profiles linked to auth via `tokenIdentifier`. Indexes: `by_tokenIdentifier`, `by_isOnline_and_isLookingForMatch`
+- `swipes` — Like/reject interactions between players. Indexes: `by_swiperId`, `by_swiperId_and_targetId`, `by_targetId_and_direction`
+
 ### Frontend
 
-- `src/app/` — Next.js App Router pages
+- `src/app/page.tsx` — Home page with Tinder-style player swipe UI (like/reject cards, match detection)
+- `src/app/login/page.tsx` — Login page with email+password via TanStack React Form
+- `src/components/player-card.tsx` — Player card component (rank colors, role icons, reputation stars)
 - `src/components/ui/` — shadcn/ui components (new-york style)
 - `src/lib/utils.ts` — `cn()` utility (clsx + tailwind-merge)
-- `middleware.ts` — Auth middleware (currently commented out, ready to activate)
 
-### Auth (currently disabled)
+### Auth
 
-Auth infrastructure is set up but middleware is commented out. When activating:
-- `src/lib/auth-client.ts` — `createAuthClient` with `convexClient()` plugin
+- `src/lib/auth-client.ts` — `createAuthClient` with `convexClient()` plugin (signIn, signOut, useSession)
 - `src/lib/auth-server.ts` — `convexBetterAuthNextJs` helpers (getToken, isAuthenticated, handler)
 - `src/app/api/auth/[...all]/route.ts` — Proxy to Convex auth endpoints
 - `src/components/convex-client-provider.tsx` — `ConvexBetterAuthProvider` wrapper
-- Wrap layout with `ConvexClientProvider`, uncomment middleware
+- `src/proxy.ts` — Auth proxy (redirects unauthenticated users to /login)
 
 ### Environment Variables
 
@@ -73,7 +80,9 @@ Squad.io connects players who have an incomplete group with available players lo
 
 **Core matchmaking criteria:** Rank > Role/Position > Language > Server/Region
 
-**Key features:** Quick search with filters, player profiles (game API stats), real-time chat, reputation system, match history, favorites list.
+**Current feature:** Tinder-style player card swipe — browse LoL players one by one, like/reject, mutual matches detected. Seed data provides 10 fake profiles. Online status simulated.
+
+**Planned features:** Quick search with filters, player profiles (game API stats), real-time chat, reputation system, match history, favorites list.
 
 **Governance:** Zero tolerance for toxicity, match ghosting, and smurfing/rank falsification.
 
