@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import type { Doc } from "../../convex/_generated/dataModel";
-import { Star } from "lucide-react";
+import { Search, Star } from "lucide-react";
 import { cn } from "~/lib/utils";
 
 function getRankColor(rank: string): { text: string; bg: string } {
@@ -37,129 +38,142 @@ interface ProfileSidebarProps {
 }
 
 export function ProfileSidebar({ player, friends }: ProfileSidebarProps) {
+  const [search, setSearch] = useState("");
   const rankColors = getRankColor(player.rank);
   const rankLabel = player.division
     ? `${player.rank} ${player.division}`
     : player.rank;
   const avatarLetter = player.username.charAt(0).toUpperCase();
 
+  const filteredFriends = search
+    ? friends.filter((f) =>
+        f.username.toLowerCase().includes(search.toLowerCase()),
+      )
+    : friends;
+
   return (
-    <aside className="flex w-64 shrink-0 flex-col gap-4 overflow-y-auto border-r border-slate-700/50 bg-slate-900/80 p-4 pb-2">
-      {/* Profile card */}
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-slate-700/50 bg-slate-800/60 p-4">
-        {/* Avatar */}
-        <div className="relative">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-slate-500 bg-slate-700">
-            {player.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={player.avatarUrl}
-                alt={player.username}
-                className="h-full w-full rounded-full object-cover"
-              />
-            ) : (
-              <span className="text-2xl font-bold text-white">
-                {avatarLetter}
-              </span>
+    <aside className="flex w-64 shrink-0 flex-col border-r border-slate-700/50 bg-slate-900/80">
+      {/* Profile card — fixed top */}
+      <div className="shrink-0 p-4 pb-3">
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-slate-700/50 bg-slate-800/60 p-4">
+          <div className="relative">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-slate-500 bg-slate-700">
+              {player.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={player.avatarUrl}
+                  alt={player.username}
+                  className="h-full w-full rounded-full object-cover"
+                />
+              ) : (
+                <span className="text-2xl font-bold text-white">
+                  {avatarLetter}
+                </span>
+              )}
+            </div>
+            {player.isOnline && (
+              <span className="absolute right-0.5 bottom-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 ring-2 ring-slate-800" />
             )}
           </div>
-          {player.isOnline && (
-            <span className="absolute right-0.5 bottom-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 ring-2 ring-slate-800" />
-          )}
-        </div>
-
-        {/* Username */}
-        <h2 className="text-lg font-bold text-white">{player.username}</h2>
-
-        {/* Rank badge */}
-        <div
-          className={cn(
-            "rounded-full px-3 py-1 text-sm font-semibold",
-            rankColors.text,
-            rankColors.bg,
-          )}
-        >
-          {rankLabel}
-        </div>
-
-        {/* Stats */}
-        <div className="flex w-full flex-col gap-1.5 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-slate-500">Win Rate</span>
-            <span className="font-medium text-slate-200">{player.winRate}%</span>
+          <h2 className="text-lg font-bold text-white">{player.username}</h2>
+          <div
+            className={cn(
+              "rounded-full px-3 py-1 text-sm font-semibold",
+              rankColors.text,
+              rankColors.bg,
+            )}
+          >
+            {rankLabel}
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-slate-500">Reputation</span>
-            <div className="flex items-center gap-1">
-              <span className="font-medium text-slate-200">
-                {player.reputation.toFixed(1)}
-              </span>
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+          <div className="flex w-full flex-col gap-1.5 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500">Win Rate</span>
+              <span className="font-medium text-slate-200">{player.winRate}%</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500">Reputation</span>
+              <div className="flex items-center gap-1">
+                <span className="font-medium text-slate-200">
+                  {player.reputation.toFixed(1)}
+                </span>
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Friends connected */}
-      <div className="flex flex-col gap-2 rounded-xl border border-slate-700/50 bg-slate-800/60 p-4">
-        <h3 className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
-          Amigos conectados
-        </h3>
+      {/* Friends section — scrollable, fills remaining space */}
+      <div className="flex min-h-0 flex-1 flex-col px-4 pb-3">
+        <div className="flex flex-1 flex-col gap-2 overflow-hidden rounded-xl border border-slate-700/50 bg-slate-800/60 p-3">
+          <h3 className="shrink-0 text-xs font-semibold tracking-wider text-slate-400 uppercase">
+            Amigos conectados
+          </h3>
 
-        {friends.length === 0 && (
-          <p className="text-sm text-slate-500">Sin amigos conectados</p>
-        )}
+          {/* Search input */}
+          <div className="relative shrink-0">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+            <input
+              type="text"
+              placeholder="Buscar amigo..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-lg border border-slate-600/50 bg-slate-700/50 py-1.5 pr-3 pl-8 text-sm text-slate-200 placeholder-slate-500 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500"
+            />
+          </div>
 
-        <div className="flex flex-col gap-2">
-          {friends.map((friend) => (
-            <FriendRow key={friend._id} friend={friend} />
-          ))}
+          {/* Scrollable friend list */}
+          <div className="flex-1 overflow-y-auto">
+            {filteredFriends.length === 0 && (
+              <p className="py-2 text-center text-sm text-slate-500">
+                {search ? "Sin resultados" : "Sin amigos conectados"}
+              </p>
+            )}
+            <div className="flex flex-col gap-2">
+              {filteredFriends.map((friend) => (
+                <FriendRow key={friend._id} friend={friend} />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Spacer */}
-      <div className="flex-1" />
-
-      {/* Social links */}
-      <div className="flex flex-col gap-2 rounded-xl border border-slate-700/50 bg-slate-800/60 p-3">
-        <SocialLink
-          icon={<DiscordIcon />}
-          label="Discord"
-          href="https://discord.gg/squadio"
-        />
-        <SocialLink
-          icon={<TwitterIcon />}
-          label="Twitter"
-          href="https://x.com/squadio"
-        />
-        <SocialLink
-          icon={<InstagramIcon />}
-          label="Instagram"
-          href="https://instagram.com/squadio"
-        />
+      {/* Social links — fixed bottom */}
+      <div className="shrink-0 px-4 pb-3">
+        <div className="flex items-center justify-center gap-3 rounded-xl border border-slate-700/50 bg-slate-800/60 px-3 py-2.5">
+          <SocialIconLink href="https://discord.gg/squadio" label="Discord">
+            <DiscordIcon />
+          </SocialIconLink>
+          <SocialIconLink href="https://x.com/squadio" label="Twitter">
+            <TwitterIcon />
+          </SocialIconLink>
+          <SocialIconLink href="https://instagram.com/squadio" label="Instagram">
+            <InstagramIcon />
+          </SocialIconLink>
+        </div>
       </div>
     </aside>
   );
 }
 
-function SocialLink({
-  icon,
-  label,
+function SocialIconLink({
   href,
+  label,
+  children,
 }: {
-  icon: React.ReactNode;
-  label: string;
   href: string;
+  label: string;
+  children: React.ReactNode;
 }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-slate-400 transition-colors hover:bg-slate-700/40 hover:text-slate-200"
+      aria-label={label}
+      className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-700/40 hover:text-slate-200"
     >
-      {icon}
-      <span>{label}</span>
+      {children}
     </a>
   );
 }
