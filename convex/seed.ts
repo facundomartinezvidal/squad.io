@@ -182,8 +182,52 @@ export const seedPlayers = internalMutation({
       },
     ];
 
+    const playerIds = [];
     for (const player of players) {
-      await ctx.db.insert("players", player);
+      const id = await ctx.db.insert("players", player);
+      playerIds.push(id);
+    }
+
+    return playerIds;
+  },
+});
+
+export const seedFriendships = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    // Get all players to pick some as friends for the first seeded user
+    const players = await ctx.db.query("players").take(10);
+    if (players.length < 4) {
+      throw new Error("Run seedPlayers first — need at least 4 players");
+    }
+
+    // Create friendships: player-1 is friends with player-2, 3, 4 (varied online status)
+    const friendPairs = [
+      { playerIdx: 0, friendIdx: 1 }, // DarkPhoenix <-> NightWolf99
+      { playerIdx: 0, friendIdx: 2 }, // DarkPhoenix <-> CrystalMage
+      { playerIdx: 0, friendIdx: 3 }, // DarkPhoenix <-> IronClad_X
+      { playerIdx: 0, friendIdx: 8 }, // DarkPhoenix <-> StarGuard
+      { playerIdx: 1, friendIdx: 5 }, // NightWolf99 <-> ShadowStep
+    ];
+
+    for (const pair of friendPairs) {
+      const player = players[pair.playerIdx];
+      const friend = players[pair.friendIdx];
+      if (!player || !friend) continue;
+      const playerId = player._id;
+      const friendId = friend._id;
+
+      // Bidirectional friendship
+      await ctx.db.insert("friends", {
+        playerId,
+        friendId,
+        status: "accepted",
+      });
+      await ctx.db.insert("friends", {
+        playerId: friendId,
+        friendId: playerId,
+        status: "accepted",
+      });
     }
   },
 });

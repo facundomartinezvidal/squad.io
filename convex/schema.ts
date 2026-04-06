@@ -31,4 +31,16 @@ export default defineSchema({
     .index("by_swiperId", ["swiperId"])
     .index("by_swiperId_and_targetId", ["swiperId", "targetId"])
     .index("by_targetId_and_direction", ["targetId", "direction"]),
+
+  friends: defineTable({
+    playerId: v.id("players"),
+    friendId: v.id("players"),
+    status: v.union(
+      v.literal("accepted"),
+      v.literal("pending"),
+    ),
+  })
+    .index("by_playerId", ["playerId"])
+    .index("by_friendId", ["friendId"])
+    .index("by_playerId_and_friendId", ["playerId", "friendId"]),
 });
