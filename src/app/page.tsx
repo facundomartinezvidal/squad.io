@@ -8,6 +8,7 @@ import { authClient } from "~/lib/auth-client";
 import { Button } from "~/components/ui/button";
 import { PlayerCard } from "~/components/player-card";
 import { ProfileSidebar } from "~/components/profile-sidebar";
+import { ActivitySidebar } from "~/components/activity-sidebar";
 import { X, Heart, Users, LogOut } from "lucide-react";
 
 export default function HomePage() {
@@ -26,6 +27,14 @@ export default function HomePage() {
   );
   const friends = useQuery(
     api.friends.getMyFriends,
+    isAuthenticated && currentPlayer ? {} : "skip",
+  );
+  const matches = useQuery(
+    api.swipes.getMatches,
+    isAuthenticated && currentPlayer ? {} : "skip",
+  );
+  const stats = useQuery(
+    api.swipes.getSwipeStats,
     isAuthenticated && currentPlayer ? {} : "skip",
   );
   const recordSwipe = useMutation(api.swipes.recordSwipe);
@@ -188,6 +197,14 @@ export default function HomePage() {
             </div>
           )}
         </main>
+
+        {/* Right sidebar */}
+        {currentPlayer && (
+          <ActivitySidebar
+            matches={matches ?? []}
+            stats={stats ?? { totalSwipes: 0, likes: 0, rejects: 0, matchCount: 0 }}
+          />
+        )}
       </div>
 
       {/* Match overlay */}
