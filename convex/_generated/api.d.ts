@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as friends from "../friends.js";
 import type * as http from "../http.js";
 import type * as players from "../players.js";
 import type * as seed from "../seed.js";
@@ -22,6 +23,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  friends: typeof friends;
   http: typeof http;
   players: typeof players;
   seed: typeof seed;
