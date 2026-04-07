@@ -63,6 +63,13 @@ export const getNextPlayer = query({
   },
 });
 
+export const getPlayer = query({
+  args: { playerId: v.id("players") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.playerId);
+  },
+});
+
 export const createMyProfile = mutation({
   args: {
     username: v.string(),

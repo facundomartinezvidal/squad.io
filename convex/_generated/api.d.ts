@@ -11,6 +11,7 @@
 import type * as auth from "../auth.js";
 import type * as friends from "../friends.js";
 import type * as http from "../http.js";
+import type * as messages from "../messages.js";
 import type * as players from "../players.js";
 import type * as seed from "../seed.js";
 import type * as swipes from "../swipes.js";
@@ -25,6 +26,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   friends: typeof friends;
   http: typeof http;
+  messages: typeof messages;
   players: typeof players;
   seed: typeof seed;
   swipes: typeof swipes;

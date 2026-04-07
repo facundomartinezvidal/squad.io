@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Doc } from "../../convex/_generated/dataModel";
+import type { Doc, Id } from "../../convex/_generated/dataModel";
 import { Search, Star } from "lucide-react";
 import { cn } from "~/lib/utils";
 
@@ -35,9 +35,10 @@ function getRankColor(rank: string): { text: string; bg: string } {
 interface ProfileSidebarProps {
   player: Doc<"players">;
   friends: Doc<"players">[];
+  onChatOpen?: (contactId: Id<"players">) => void;
 }
 
-export function ProfileSidebar({ player, friends }: ProfileSidebarProps) {
+export function ProfileSidebar({ player, friends, onChatOpen }: ProfileSidebarProps) {
   const [search, setSearch] = useState("");
   const rankColors = getRankColor(player.rank);
   const rankLabel = player.division
@@ -129,9 +130,13 @@ export function ProfileSidebar({ player, friends }: ProfileSidebarProps) {
                 {search ? "Sin resultados" : "Sin amigos conectados"}
               </p>
             )}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-0.5">
               {filteredFriends.map((friend) => (
-                <FriendRow key={friend._id} friend={friend} />
+                <FriendRow
+                  key={friend._id}
+                  friend={friend}
+                  onClick={onChatOpen ? () => onChatOpen(friend._id) : undefined}
+                />
               ))}
             </div>
           </div>
@@ -202,7 +207,7 @@ function InstagramIcon() {
   );
 }
 
-function FriendRow({ friend }: { friend: Doc<"players"> }) {
+function FriendRow({ friend, onClick }: { friend: Doc<"players">; onClick?: () => void }) {
   const avatarLetter = friend.username.charAt(0).toUpperCase();
   const statusLabel = friend.isLookingForMatch
     ? "Buscando partida"
@@ -220,8 +225,17 @@ function FriendRow({ friend }: { friend: Doc<"players"> }) {
       ? "bg-blue-500"
       : "bg-slate-600";
 
+  const Wrapper = onClick ? "button" : "div";
+
   return (
-    <div className="flex items-center gap-2.5">
+    <Wrapper
+      type={onClick ? "button" : undefined}
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-2.5 rounded-lg p-1",
+        onClick && "cursor-pointer transition-colors hover:bg-slate-700/30",
+      )}
+    >
       {/* Mini avatar */}
       <div className="relative shrink-0">
         <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-600 bg-slate-700 text-xs font-bold text-white">
@@ -242,6 +256,6 @@ function FriendRow({ friend }: { friend: Doc<"players"> }) {
         </p>
         <p className={cn("truncate text-xs", statusColor)}>{statusLabel}</p>
       </div>
-    </div>
+    </Wrapper>
   );
 }

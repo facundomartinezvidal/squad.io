@@ -43,4 +43,12 @@ export default defineSchema({
     .index("by_playerId", ["playerId"])
     .index("by_friendId", ["friendId"])
     .index("by_playerId_and_friendId", ["playerId", "friendId"]),
+
+  messages: defineTable({
+    senderId: v.id("players"),
+    receiverId: v.id("players"),
+    body: v.string(),
+  })
+    .index("by_senderId_and_receiverId", ["senderId", "receiverId"])
+    .index("by_receiverId_and_senderId", ["receiverId", "senderId"]),
 });

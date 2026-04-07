@@ -9,13 +9,17 @@ import { Button } from "~/components/ui/button";
 import { PlayerCard } from "~/components/player-card";
 import { ProfileSidebar } from "~/components/profile-sidebar";
 import { ActivitySidebar } from "~/components/activity-sidebar";
-import { X, Heart, Users, LogOut } from "lucide-react";
+import { ChatPanel } from "~/components/chat-panel";
+import type { Id } from "../../convex/_generated/dataModel";
+import { X, Heart, Users, LogOut, MessageCircle } from "lucide-react";
 
 export default function HomePage() {
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const router = useRouter();
   const [showMatch, setShowMatch] = useState(false);
   const [isSwiping, setIsSwiping] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatContactId, setChatContactId] = useState<Id<"players"> | null>(null);
 
   const currentPlayer = useQuery(
     api.players.getCurrentPlayer,
@@ -65,6 +69,11 @@ export default function HomePage() {
     await createProfile({ username: "Player", role: "Mid" });
   };
 
+  const openChat = (contactId?: Id<"players">) => {
+    setChatContactId(contactId ?? null);
+    setChatOpen(true);
+  };
+
   // Loading state
   if (authLoading) {
     return (
@@ -108,7 +117,15 @@ export default function HomePage() {
         <h1 className="text-2xl font-extrabold tracking-widest text-white uppercase">
           Squad.io
         </h1>
-        <div className="flex w-24 justify-end">
+        <div className="flex w-24 items-center justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-slate-400 hover:text-white"
+            onClick={() => openChat()}
+          >
+            <MessageCircle className="h-5 w-5" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -127,6 +144,7 @@ export default function HomePage() {
           <ProfileSidebar
             player={currentPlayer}
             friends={friends ?? []}
+            onChatOpen={openChat}
           />
         )}
 
@@ -203,9 +221,24 @@ export default function HomePage() {
           <ActivitySidebar
             matches={matches ?? []}
             stats={stats ?? { totalSwipes: 0, likes: 0, rejects: 0, matchCount: 0 }}
+            onChatOpen={openChat}
           />
         )}
       </div>
+
+      {/* Chat panel */}
+      {chatOpen && currentPlayer && (
+        <div className="fixed inset-y-0 right-0 z-40 w-80 border-l border-slate-700/50 bg-slate-900/95 shadow-2xl backdrop-blur-sm">
+          <ChatPanel
+            currentPlayerId={currentPlayer._id}
+            onClose={() => {
+              setChatOpen(false);
+              setChatContactId(null);
+            }}
+            initialContactId={chatContactId}
+          />
+        </div>
+      )}
 
       {/* Match overlay */}
       {showMatch && (

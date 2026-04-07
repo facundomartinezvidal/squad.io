@@ -1,6 +1,6 @@
 "use client";
 
-import type { Doc } from "../../convex/_generated/dataModel";
+import type { Doc, Id } from "../../convex/_generated/dataModel";
 import { Heart, Swords, TrendingUp, Trophy, UserCheck } from "lucide-react";
 import { cn } from "~/lib/utils";
 
@@ -12,9 +12,10 @@ interface ActivitySidebarProps {
     rejects: number;
     matchCount: number;
   };
+  onChatOpen?: (contactId: Id<"players">) => void;
 }
 
-export function ActivitySidebar({ matches, stats }: ActivitySidebarProps) {
+export function ActivitySidebar({ matches, stats, onChatOpen }: ActivitySidebarProps) {
   return (
     <aside className="flex w-64 shrink-0 flex-col border-l border-slate-700/50 bg-slate-900/80">
       {/* Stats panel */}
@@ -74,9 +75,13 @@ export function ActivitySidebar({ matches, stats }: ActivitySidebarProps) {
                 </p>
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-0.5">
                 {matches.map((match) => (
-                  <MatchRow key={match._id} player={match} />
+                  <MatchRow
+                    key={match._id}
+                    player={match}
+                    onClick={onChatOpen ? () => onChatOpen(match._id) : undefined}
+                  />
                 ))}
               </div>
             )}
@@ -123,14 +128,17 @@ function getRankColor(rank: string): string {
   }
 }
 
-function MatchRow({ player }: { player: Doc<"players"> }) {
+function MatchRow({ player, onClick }: { player: Doc<"players">; onClick?: () => void }) {
   const avatarLetter = player.username.charAt(0).toUpperCase();
   const rankLabel = player.division
     ? `${player.rank} ${player.division}`
     : player.rank;
 
   return (
-    <div className="flex items-center gap-2.5 rounded-lg p-1.5 transition-colors hover:bg-slate-700/30">
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-2.5 rounded-lg p-1.5 text-left transition-colors hover:bg-slate-700/30">
       <div className="relative shrink-0">
         <div className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-600 bg-slate-700 text-xs font-bold text-white">
           {avatarLetter}
@@ -151,6 +159,6 @@ function MatchRow({ player }: { player: Doc<"players"> }) {
           <span className="text-xs text-slate-500 capitalize">{player.role}</span>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
