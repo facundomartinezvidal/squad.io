@@ -57,6 +57,57 @@ export const recordSwipe = mutation({
   },
 });
 
+export const getSwipeStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return { totalSwipes: 0, likes: 0, rejects: 0, matchCount: 0 };
+    }
+
+    const currentPlayer = await ctx.db
+      .query("players")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
+      )
+      .unique();
+
+    if (!currentPlayer) {
+      return { totalSwipes: 0, likes: 0, rejects: 0, matchCount: 0 };
+    }
+
+    const swipes = await ctx.db
+      .query("swipes")
+      .withIndex("by_swiperId", (q) => q.eq("swiperId", currentPlayer._id))
+      .collect();
+
+    const likes = swipes.filter((s) => s.direction === "like");
+    const rejects = swipes.filter((s) => s.direction === "reject");
+
+    let matchCount = 0;
+    for (const like of likes) {
+      const reciprocal = await ctx.db
+        .query("swipes")
+        .withIndex("by_swiperId_and_targetId", (q) =>
+          q
+            .eq("swiperId", like.targetId)
+            .eq("targetId", currentPlayer._id),
+        )
+        .unique();
+      if (reciprocal !== null && reciprocal.direction === "like") {
+        matchCount++;
+      }
+    }
+
+    return {
+      totalSwipes: swipes.length,
+      likes: likes.length,
+      rejects: rejects.length,
+      matchCount,
+    };
+  },
+});
+
 export const getMatches = query({
   args: {},
   handler: async (ctx) => {
