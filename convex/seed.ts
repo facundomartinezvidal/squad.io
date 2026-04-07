@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalAction } from "./_generated/server";
+import { internalAction, internalMutation } from "./_generated/server";
 
 export const createUser = internalAction({
   args: {
@@ -33,5 +33,201 @@ export const createUser = internalAction({
     }
 
     return { status: response.status, body };
+  },
+});
+
+export const seedPlayers = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const players = [
+      {
+        username: "DarkPhoenix",
+        rank: "Gold",
+        division: "III",
+        role: "Top",
+        level: 120,
+        winRate: 52,
+        language: "es",
+        server: "LAS",
+        reputation: 4.2,
+        isOnline: true,
+        isLookingForMatch: true,
+        tokenIdentifier: "seed|player-1",
+      },
+      {
+        username: "NightWolf99",
+        rank: "Platinum",
+        division: "II",
+        role: "Jungle",
+        level: 230,
+        winRate: 58,
+        language: "es",
+        server: "LAS",
+        reputation: 4.5,
+        isOnline: true,
+        isLookingForMatch: true,
+        tokenIdentifier: "seed|player-2",
+      },
+      {
+        username: "CrystalMage",
+        rank: "Silver",
+        division: "I",
+        role: "Mid",
+        level: 85,
+        winRate: 48,
+        language: "es",
+        server: "LAS",
+        reputation: 3.8,
+        isOnline: true,
+        isLookingForMatch: true,
+        tokenIdentifier: "seed|player-3",
+      },
+      {
+        username: "IronClad_X",
+        rank: "Diamond",
+        division: "IV",
+        role: "Support",
+        level: 310,
+        winRate: 61,
+        language: "en",
+        server: "NA",
+        reputation: 4.7,
+        isOnline: true,
+        isLookingForMatch: true,
+        tokenIdentifier: "seed|player-4",
+      },
+      {
+        username: "ThunderADC",
+        rank: "Gold",
+        division: "I",
+        role: "ADC",
+        level: 150,
+        winRate: 55,
+        language: "pt",
+        server: "LAS",
+        reputation: 4.0,
+        isOnline: true,
+        isLookingForMatch: true,
+        tokenIdentifier: "seed|player-5",
+      },
+      {
+        username: "ShadowStep",
+        rank: "Emerald",
+        division: "III",
+        role: "Jungle",
+        level: 200,
+        winRate: 57,
+        language: "es",
+        server: "LAN",
+        reputation: 4.3,
+        isOnline: true,
+        isLookingForMatch: true,
+        tokenIdentifier: "seed|player-6",
+      },
+      {
+        username: "FrostBite22",
+        rank: "Platinum",
+        division: "IV",
+        role: "Mid",
+        level: 175,
+        winRate: 53,
+        language: "en",
+        server: "EUW",
+        reputation: 3.5,
+        isOnline: true,
+        isLookingForMatch: true,
+        tokenIdentifier: "seed|player-7",
+      },
+      {
+        username: "VoidWalker",
+        rank: "Silver",
+        division: "III",
+        role: "Top",
+        level: 65,
+        winRate: 45,
+        language: "es",
+        server: "LAS",
+        reputation: 3.2,
+        isOnline: true,
+        isLookingForMatch: true,
+        tokenIdentifier: "seed|player-8",
+      },
+      {
+        username: "StarGuard",
+        rank: "Gold",
+        division: "II",
+        role: "Support",
+        level: 140,
+        winRate: 56,
+        language: "es",
+        server: "LAS",
+        reputation: 4.8,
+        isOnline: true,
+        isLookingForMatch: true,
+        tokenIdentifier: "seed|player-9",
+      },
+      {
+        username: "BladeRunner",
+        rank: "Diamond",
+        division: "III",
+        role: "ADC",
+        level: 280,
+        winRate: 63,
+        language: "en",
+        server: "NA",
+        reputation: 4.6,
+        isOnline: true,
+        isLookingForMatch: true,
+        tokenIdentifier: "seed|player-10",
+      },
+    ];
+
+    const playerIds = [];
+    for (const player of players) {
+      const id = await ctx.db.insert("players", player);
+      playerIds.push(id);
+    }
+
+    return playerIds;
+  },
+});
+
+export const seedFriendships = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    // Get all players to pick some as friends for the first seeded user
+    const players = await ctx.db.query("players").take(10);
+    if (players.length < 4) {
+      throw new Error("Run seedPlayers first — need at least 4 players");
+    }
+
+    // Create friendships: player-1 is friends with player-2, 3, 4 (varied online status)
+    const friendPairs = [
+      { playerIdx: 0, friendIdx: 1 }, // DarkPhoenix <-> NightWolf99
+      { playerIdx: 0, friendIdx: 2 }, // DarkPhoenix <-> CrystalMage
+      { playerIdx: 0, friendIdx: 3 }, // DarkPhoenix <-> IronClad_X
+      { playerIdx: 0, friendIdx: 8 }, // DarkPhoenix <-> StarGuard
+      { playerIdx: 1, friendIdx: 5 }, // NightWolf99 <-> ShadowStep
+    ];
+
+    for (const pair of friendPairs) {
+      const player = players[pair.playerIdx];
+      const friend = players[pair.friendIdx];
+      if (!player || !friend) continue;
+      const playerId = player._id;
+      const friendId = friend._id;
+
+      // Bidirectional friendship
+      await ctx.db.insert("friends", {
+        playerId,
+        friendId,
+        status: "accepted",
+      });
+      await ctx.db.insert("friends", {
+        playerId: friendId,
+        friendId: playerId,
+        status: "accepted",
+      });
+    }
   },
 });
